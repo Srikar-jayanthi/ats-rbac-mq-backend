@@ -10,8 +10,8 @@ const connection = new IORedis(process.env.QUEUE_URL || 'redis://localhost:6379'
   maxRetriesPerRequest: null,
 });
 
-// Write to mock_emails.log in the project root folder (parent of compiled dist/ folder)
-const logFilePath = path.join(__dirname, '../mock_emails.log');
+// Write to mock_emails.log in the project root folder
+const logFilePath = path.join(process.cwd(), 'mock_emails.log');
 
 /**
  * Appends a structured JSON log entry to mock_emails.log simulating email transmission.
