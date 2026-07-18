@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ats_db
+    environment:
+      POSTGRES_USER: ats_user
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: ats_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ats_user -d ats_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  queue:
+    image: redis:alpine
+    container_name: ats_queue
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: ats_api
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=ats_user
+      - DB_PASSWORD=securepassword
+      - DB_NAME=ats_db
+      - QUEUE_URL=redis://queue:6379
+      - JWT_SECRET=super_secret_jwt_key
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      queue:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  worker:
+    build: .
+    container_name: ats_worker
+    command: npm run start:worker
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=ats_user
+      - DB_PASSWORD=securepassword
+      - DB_NAME=ats_db
+      - QUEUE_URL=redis://queue:6379
+      - JWT_SECRET=super_secret_jwt_key
+    depends_on:
+      db:
+        condition: service_healthy
+      queue:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:
