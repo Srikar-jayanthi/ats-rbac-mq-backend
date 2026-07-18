@@ -312,4 +312,60 @@ router.post(
   }
 );
 
+/**
+ * GET /api/jobs/:jobId/applications
+ * Lists applications for a specific job.
+ * Access restricted to recruiters or hiring managers belonging to the job's company.
+ * Supports stage filtering via query parameter: stage=Screening
+ */
+router.get(
+  '/:jobId/applications',
+  authenticateToken,
+  requireRole(['recruiter', 'hiring_manager']),
+  async (req: Request, res: Response) => {
+    const { jobId } = req.params;
+    const { stage } = req.query;
+    const companyId = req.user?.company_id;
+
+    if (!companyId) {
+      return res.status(403).json({ error: 'Forbidden: Recruiter must belong to a company' });
+    }
+
+    try {
+      // 1. Verify job exists and belongs to recruiter's/manager's company
+      const jobCheck = await pool.query('SELECT company_id FROM jobs WHERE id = $1', [jobId]);
+      if (jobCheck.rowCount === 0) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      if (jobCheck.rows[0].company_id !== companyId) {
+        return res.status(403).json({ error: 'Forbidden: Job belongs to another company' });
+      }
+
+      // 2. Fetch applications with optional stage filtering
+      let queryStr = `
+        SELECT a.id, a.job_id, a.candidate_id, a.stage, a.resume_url, a.created_at, a.updated_at,
+               u.email as candidate_email
+        FROM applications a
+        JOIN users u ON a.candidate_id = u.id
+        WHERE a.job_id = $1
+      `;
+      const queryParams: any[] = [jobId];
+
+      if (stage && typeof stage === 'string') {
+        queryStr += ` AND a.stage = $2`;
+        queryParams.push(stage);
+      }
+
+      queryStr += ` ORDER BY a.created_at DESC`;
+
+      const result = await pool.query(queryStr, queryParams);
+      return res.status(200).json(result.rows);
+    } catch (err) {
+      console.error('Error listing job applications:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
 export default router;
