@@ -248,7 +248,7 @@ router.post(
         [jobId, candidateId]
       );
 
-      if (applicationCheck.rowCount > 0) {
+      if (applicationCheck.rowCount && applicationCheck.rowCount > 0) {
         return res.status(400).json({ error: 'You have already applied to this job' });
       }
 
