@@ -2,11 +2,11 @@
   "name": "ats-backend",
   "version": "1.0.0",
   "description": "Application Tracking System Backend API with RBAC and Message Queues",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "start:worker": "node dist/worker.js",
+    "start": "node dist/src/index.js",
+    "start:worker": "node dist/src/worker.js",
     "dev": "nodemon --watch src -e ts --exec ts-node src/index.ts",
     "dev:worker": "nodemon --watch src -e ts --exec ts-node src/worker.ts",
     "test": "jest --runInBand --detectOpenHandles --forceExit"
