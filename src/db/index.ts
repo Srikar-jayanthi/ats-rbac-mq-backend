@@ -24,7 +24,7 @@ export const initDb = async (retries = 5, delay = 2000): Promise<void> => {
       const client = await pool.connect();
       client.release();
       
-      const schemaPath = path.join(__dirname, 'schema.sql');
+      const schemaPath = path.join(process.cwd(), 'src/db/schema.sql');
       const sql = fs.readFileSync(schemaPath, 'utf8');
       await pool.query(sql);
       console.log('Database initialized successfully.');
