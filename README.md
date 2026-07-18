@@ -52,13 +52,13 @@ erDiagram
 
     COMPANIES {
         uuid id PK
-        string name UNIQUE
+        string name
         timestamp created_at
     }
 
     USERS {
         uuid id PK
-        string email UNIQUE
+        string email
         string password_hash
         user_role role
         uuid company_id FK
