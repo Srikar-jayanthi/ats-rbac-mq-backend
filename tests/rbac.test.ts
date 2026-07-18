@@ -10,6 +10,11 @@ jest.mock('../src/db', () => ({
   connect: jest.fn(),
 }));
 
+// Mock Queue module to prevent actual Redis connection attempts during tests
+jest.mock('../src/queue', () => ({
+  enqueueEmail: jest.fn().mockResolvedValue(undefined),
+}));
+
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key';
 
 describe('RBAC & Authentication Middleware Integration Tests', () => {
