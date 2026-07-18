@@ -28,7 +28,18 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     role user_role NOT NULL,
     company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT chk_user_company CHECK (
+        (role = 'candidate' AND company_id IS NULL) OR 
+        (role IN ('recruiter', 'hiring_manager') AND company_id IS NOT NULL)
+    )
+);
+
+-- Ensure constraint is applied to existing tables from previous run
+ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_user_company;
+ALTER TABLE users ADD CONSTRAINT chk_user_company CHECK (
+    (role = 'candidate' AND company_id IS NULL) OR 
+    (role IN ('recruiter', 'hiring_manager') AND company_id IS NOT NULL)
 );
 
 -- 3. Jobs Table
